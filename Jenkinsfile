@@ -23,13 +23,17 @@ pipeline {
       steps {
         sh '''
           . venv/bin/activate
-          bandit -f json -o bandit-output.json -r . || true
+          bandit -f sarif -o bandit-output.sarif -r . || true
         '''
         // Gunakan parser Bandit JSON
-        recordIssues tools: [bandit(pattern: 'bandit-output.json')]
-        archiveArtifacts artifacts: 'bandit-output.json', fingerprint: true
+        recordIssues tools: [sarif(pattern: 'bandit-output.sarif')]
+        archiveArtifacts artifacts: 'bandit-output.sarif', fingerprint: true
       }
     }
   }
 }
+
+
+
+
 
