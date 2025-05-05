@@ -1,12 +1,14 @@
 pipeline {
     agent any
+
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/Chaizaa/sast-demo-app.git', branch: 'master'
+                git url: 'https://github.com/Chaizaa/sast-demo-app.git', branch: 'main'
             }
         }
-        stage('Install Dependencies') {
+
+        stage('Setup Virtual Environment') {
             steps {
                 sh '''
                     python3 -m venv venv
@@ -16,14 +18,27 @@ pipeline {
                 '''
             }
         }
+
         stage('SAST Analysis') {
             steps {
                 sh '''
                     . venv/bin/activate
                     bandit -f xml -o bandit-output.xml -r . || true
                 '''
+                recordIssues(
+                    tool: issues(name: 'Bandit', pattern: 'bandit-output.xml', reportEncoding: 'UTF-8')
+                )
+                archiveArtifacts artifacts: 'bandit-output.xml', fingerprint: true
             }
         }
     }
-}
 
+    post {
+        always {
+            echo 'Pipeline finished.'
+        }
+        failure {
+            echo 'Pipeline failed.'
+        }
+    }
+}
